@@ -1,4 +1,4 @@
-# Everything CUDA
+# CUDA Lab
 My journey towards learning CUDA.
 
 # Resources
