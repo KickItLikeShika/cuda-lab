@@ -1,21 +1,6 @@
 #include <stdio.h>
 
 
-// notes
-
-// error checking and handling in cuda
-// cudaError_t err = CudaMalloc((void **) &a_d, size);
-// if (error != cudaSuccess) {
-//     printf("%s in %s at line %d \n", cudaGetErrorString(err), __FILE__.__LINE__);
-//     exit(EXIT_FAILURE);
-// }
-
-
-// __global__ is a cuda keyword, means this is a cuda kernel, callable from host or device, executed on deivce, and it initaties a new grid of device threads
-// __host__ callable on host, exectued on host, caller host thread
-// __device__ callable on device, executed on device, caller device thread
-
-
 __global__
 void vecAddKernel(float* a, float* b, float* c, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -44,7 +29,7 @@ void addVectors(float* a_h, float* b_h, float* c_h, int n) {
     // and execute on device
     vecAddKernel<<<ceil(n/256.0), 256>>>(a_d, b_d, c_d, n);
 
-    // move vector from cpu gpu to cpu
+    // move vector from gpu to cpu
     cudaMemcpy(c_h, c_d, size, cudaMemcpyDeviceToHost);
 
     // free gpu/device memory
@@ -68,3 +53,19 @@ int main() {
 
     return 0;
 }
+
+
+// notes
+
+// error checking and handling in cuda
+// cudaError_t err = CudaMalloc((void **) &a_d, size);
+// if (error != cudaSuccess) {
+//     printf("%s in %s at line %d \n", cudaGetErrorString(err), __FILE__.__LINE__);
+//     exit(EXIT_FAILURE);
+// }
+
+
+// __global__ is a cuda keyword, means this is a cuda kernel, callable from host or device, executed on deivce, and it initaties a new grid of device threads
+// __host__ callable on host, exectued on host, caller host thread
+// __device__ callable on device, executed on device, caller device thread
+
