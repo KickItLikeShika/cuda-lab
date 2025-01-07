@@ -11,6 +11,7 @@ __global__ void rgbToGrayKernel(unsigned char* d_in, unsigned char* d_out, int w
     int row = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (col < width && row < height) {
+        // remember, C stores high dimensional arrays in row-major order (linearized)
         // get 1d offset for the grayscale image
         int grayOffset = row * width + col;
         
@@ -30,13 +31,14 @@ void rgbToGray(unsigned char* input, unsigned char* output, int width, int heigh
     size_t numPixels = width * height;
 
     unsigned char *d_in, *d_out;
-    cudaMalloc(&d_in, numPixels * channels);
-    cudaMalloc(&d_out, numPixels);
+    cudaMalloc((void **) &d_in, numPixels * channels);
+    cudaMalloc((void **) &d_out, numPixels);
 
     cudaMemcpy(d_in, input, numPixels * channels, cudaMemcpyHostToDevice);
 
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
+
     rgbToGrayKernel<<<gridSize, blockSize>>>(d_in, d_out, width, height, channels);
 
     cudaMemcpy(output, d_out, numPixels, cudaMemcpyDeviceToHost);
@@ -49,12 +51,16 @@ int main() {
     int width, height, channels;
 
     // load the image
-    unsigned char *image_data = stbi_load("example.jpg", &width, &height, &channels, 0);
+    unsigned char *image_data = stbi_load("IMG_2659.jpg", &width, &height, &channels, 0);
 
     if (image_data == nullptr) {
         std::cerr << "Error: Could not open input image." << std::endl;
         return -1;
     }
+
+    printf("width %d\n", width);
+    printf("height %d\n", height);
+    printf("channels %d\n", channels);
 
     // allocate memory for the output grayscale image
     unsigned char *gray_image = (unsigned char*)malloc(width * height);
