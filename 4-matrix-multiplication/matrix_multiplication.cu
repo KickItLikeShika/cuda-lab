@@ -1,62 +1,66 @@
 #include <stdio.h>
 
+__global__ void matMulKernel(float* a, float* b, float* c, int n, int m, int p) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x; // p: columns of B, columns of C
+    int row = blockIdx.y * blockDim.y + threadIdx.y; // n: rows of A, rows of C
 
-__global__ void matMulKernel(float* a, float* b, float* c, int n, int m) {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if ((row < n) && (col < m)) {
+    if ((row < n) && (col < p)) {
         float val = 0;
-        for int (k = 0; k < n, k++) {
-            val += a[row * n + k] * b[k * m + col];
+        for (int k = 0; k < m; k++) {
+            val += a[row * m + k] * b[k * p + col];
         }
-        c[row * m + col] = val;
+        c[row * p + col] = val;
     }
 }
 
-void matMul(float* a_h, float* b_h, float* c_h, int n, int m) {
+void matMul(float* a_h, float* b_h, float* c_h, int n, int m, int p) {
     // allocate memory on the host
-    int size = sizeof(float) * n;
+    int sizeA = sizeof(float) * n * m; // Size of matrix A
+    int sizeB = sizeof(float) * m * p; // Size of matrix B
+    int sizeC = sizeof(float) * n * p; // Size of matrix C
+
     float *a_d, *b_d, *c_d;
-    
+
     // allocate memory on the device
-    cudaMalloc((void **) &a_d, size);
-    cudaMalloc((void **) &b_d, size);
-    cudaMalloc((void **) &c_d, size);
+    cudaMalloc((void **) &a_d, sizeA);
+    cudaMalloc((void **) &b_d, sizeB);
+    cudaMalloc((void **) &c_d, sizeC);
 
     // move data from host to device
-    cudaMemcpy(a_d, a_h, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(b_d, b_h, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(a_d, a_h, sizeA, cudaMemcpyHostToDevice);
+    cudaMemcpy(b_d, b_h, sizeB, cudaMemcpyHostToDevice);
     
+    dim3 blockSize(16, 16);
+    dim3 gridSize((m + blockSize.x - 1) / blockSize.x, (n + blockSize.y - 1) / blockSize.y);
 
-    // launch the grid, ceil(n/256) blocks of 256 threads each
-    // and execute on device
-    
+    matMulKernel<<<gridSize, blockSize>>>(a_d, b_d, c_d, n, m, p);
+
+    cudaMemcpy(c_h, c_d, sizeC, cudaMemcpyDeviceToHost);
+
+    cudaFree(a_d);
+    cudaFree(b_d);
+    cudaFree(c_d);
 }
 
 
 int main() {
-    // rows and columns of the matrices
-    // int n, m;
-    // float *a;
-    // float *b;
-
     // define a 2d matrix a and b
-    int n = 2;
-    int m = 2;
+    int n = 2; // Rows of A
+    int m = 2; // Columns of A, Rows of B
+    int p = 2; // Columns of B
+
     float a[2][2] = {{1, 2}, {3, 4}};
     float b[2][2] = {{1, 2}, {3, 4}};
     float c[2][2];
 
-    // // take input for both matrices
-    // for (int i = 0; i < n; i++) {
-    //     for (int j = 0; j < m; j++) {
-    //         std::cin >> a[i * m + j];
-    //     }
-    // }
+    // matrix multiplication
+    matMul((float*)a, (float*)b, (float*)c, n, m, p);
 
-    
-
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            printf("%.1f \n", c[i][j]);
+        }
+    }
 
     return 0;
 }
