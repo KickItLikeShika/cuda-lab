@@ -53,19 +53,3 @@ int main() {
 
     return 0;
 }
-
-
-// notes
-
-// error checking and handling in cuda
-// cudaError_t err = CudaMalloc((void **) &a_d, size);
-// if (error != cudaSuccess) {
-//     printf("%s in %s at line %d \n", cudaGetErrorString(err), __FILE__.__LINE__);
-//     exit(EXIT_FAILURE);
-// }
-
-
-// __global__ is a cuda keyword, means this is a cuda kernel, callable from host or device, executed on deivce, and it initaties a new grid of device threads
-// __host__ callable on host, exectued on host, caller host thread
-// __device__ callable on device, executed on device, caller device thread
-
