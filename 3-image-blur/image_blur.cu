@@ -1,5 +1,5 @@
-#include <iostream>
-#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -17,20 +17,20 @@ __global__ void blurKernel(unsigned char* d_in, unsigned char* d_out, int width,
             int pixels = 0;
 
             // get average of the surrounding BLUR_SIZE x BLUR_SIZE box
-            for(int blurRow = -BLUR_SIZE; blurRow < BLUR_SIZE+1; blurRow++) {
-                for(int blurCol = -BLUR_SIZE; blurCol < BLUR_SIZE+1; blurCol++) {
+            for (int blurRow = -BLUR_SIZE; blurRow < BLUR_SIZE+1; blurRow++) {
+                for (int blurCol = -BLUR_SIZE; blurCol < BLUR_SIZE+1; blurCol++) {
                     int curRow = row + blurRow;
                     int curCol = col + blurCol;
 
                     // make sure we have a valid image pixel
-                    if(curCol >= 0 && curCol < width && curRow >= 0 && curRow < height) {
+                    if (curCol >= 0 && curCol < width && curRow >= 0 && curRow < height) {
                         pixVal += d_in[(curRow * width + curCol) * channels + c];
                         pixels++;
                     }
                 }
             }
 
-            d_out[(row * width + col) * channels + c] = (unsigned char) (pixVal / pixels);
+            d_out[(row * width + col) * channels + c] = (unsigned char)(pixVal / pixels);
         }
     }
 }
@@ -59,19 +59,19 @@ int main() {
     int width, height, channels;
 
     // load the image
-    unsigned char *image_data = stbi_load("IMG_2659.jpg", &width, &height, &channels, 0);
+    unsigned char *image_data = stbi_load("example.jpg", &width, &height, &channels, 0);
 
-    if (image_data == nullptr) {
-        std::cerr << "Error: Could not open input image." << std::endl;
+    if (image_data == NULL) {
+        fprintf(stderr, "Error: Could not open input image.\n");
         return -1;
     }
 
-    printf("width %d\n", width);
-    printf("height %d\n", height);
-    printf("channels %d\n", channels);
+    printf("width: %d\n", width);
+    printf("height: %d\n", height);
+    printf("channels: %d\n", channels);
 
     // allocate memory for the output blurred image
-    unsigned char *blurred_image = (unsigned char*)malloc(width * height * channels);
+    unsigned char *blurred_image = (unsigned char *)malloc(width * height * channels);
 
     // blur the image
     blurImage(image_data, blurred_image, width, height, channels);
