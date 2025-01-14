@@ -2,7 +2,9 @@
 My journey towards learning CUDA.
 
 ## How to Run/Use
-.
+1. Install NVCC Complier
+2. Complile the `CUDA` file using `nvcc <filename> -o <compiled_filename>`
+3. Run `./<compiled_filename>`
 
 ## Resources
 - Programming Massively Parallel Processors Book.
